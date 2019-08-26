@@ -48,7 +48,6 @@ RUN set -eux; \
                 git \
                 gnupg2 \
                 gzip \
-                imagemagick \
                 jq \
                 libc6-dev \
                 libcurl3-dev \
@@ -79,49 +78,6 @@ RUN set -eux; \
         apt-get install -y --no-install-recommends gnupg-curl; \
     fi; \
     rm -rf /var/lib/apt/lists/*;
-
-#
-# Android 8
-#
-RUN set -eux; \
-    add-apt-repository ppa:openjdk-r/ppa; \            
-    apt-get update; \
-    apt-get install -y openjdk-8-jdk; 
-
-#
-# Android SDK
-#
-RUN set -eux; \
-    cd /opt; \
-    mkdir -p android_sdk; \
-    cd /usr/src; \
-    wget https://dl.google.com/android/repository/sdk-tools-linux-4333796.zip; \
-    unzip sdk-tools-linux-4333796.zip; \
-    /var/lib/dpkg/info/ca-certificates-java.postinst configure; \
-    echo y | tools/bin/sdkmanager 'build-tools;29.0.2' --sdk_root=/opt/android_sdk; \
-    rm -f sdk-tools-linux-4333796.zip; \
-    rm -rf tools;
-
-#
-# Lib Sodium
-#
-#RUN set -eux; \
-#    cd /usr/local; \
-#    wget https://download.libsodium.org/libsodium/releases/libsodium-1.0.16.tar.gz; \
-#    gunzip libsodium-1.0.16.tar.gz; \
-#    tar -xvf libsodium-1.0.16.tar; \
-#    cd libsodium-1.0.16; \
-#    ./configure; \
-#    make; \
-#    make check; \
-#    make install; \
-#    cd ..; \
-#    rm -f libsodium-1.0.16.tar; \
-#    rm -f libsodium-1.0.16.tar.gz;
-#
-#
-# Ruby
-#
 
 RUN wget -O ruby.tar.xz "https://cache.ruby-lang.org/pub/ruby/${RUBY_MAJOR%-rc}/ruby-$RUBY_VERSION.tar.xz"; \
     echo "$RUBY_DOWNLOAD_SHA256 *ruby.tar.xz" | sha256sum --check --strict; \
@@ -225,21 +181,13 @@ VOLUME /data
 
 #
 # Mongo
-# https://github.com/docker-library/mongo/blob/master/3.4
+# https://github.com/docker-library/mongo/blob/master/3.0
 #
 
 RUN set -eux; \
     groupadd -r mongodb && useradd -r -g mongodb mongodb; \
     wget -O /js-yaml.js "https://github.com/nodeca/js-yaml/raw/${JSYAML_VERSION}/dist/js-yaml.js"; \
     mkdir /docker-entrypoint-initdb.d; \
-#    export GNUPGHOME="$(mktemp -d)"; \
-#    for key in $GPG_KEYS; do \
-#        gpg --batch --keyserver ha.pool.sks-keyservers.net --recv-keys "$key"; \
-#    done; \
-#    gpg --batch --export $GPG_KEYS > /etc/apt/trusted.gpg.d/mongodb.gpg; \
-#    command -v gpgconf && gpgconf --kill all || :; \
-#    rm -r "$GNUPGHOME"; \
-#    apt-key list; \
     apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10; \
     apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 9ECBEC467F0CEB10; \
     wget -qO - https://www.mongodb.org/static/pgp/server-$MONGO_MAJOR.asc | sudo apt-key add -; \
