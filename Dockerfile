@@ -1,4 +1,4 @@
-FROM ubuntu:trusty
+FROM ubuntu:bionic
 
 # Allow build-time overrides (eg. to build image with MongoDB Enterprise version)
 # Options for MONGO_PACKAGE: mongodb-org OR mongodb-enterprise
@@ -19,13 +19,14 @@ ENV RUBY_MAJOR=2.4 \
     REDIS_DOWNLOAD_SHA=2139009799d21d8ff94fc40b7f36ac46699b9e1254086299f8d3b223ca54a375 \
     JSYAML_VERSION=3.13.0 \
     GPG_KEYS=0C49F3730359A14518585931BC711F9BA15703C6 \
-    MONGO_MAJOR=3.0 \
-    MONGO_VERSION=3.0.15
+    MONGO_MAJOR=4.0 \
+    MONGO_VERSION=4.0.12
 ENV BUNDLE_PATH="$GEM_HOME" \
     BUNDLE_APP_CONFIG="$GEM_HOME" \
     PATH=$GEM_HOME/bin:$BUNDLE_PATH/gems/bin:$PATH \
     MONGO_PACKAGE=${MONGO_PACKAGE} \
-    MONGO_REPO=${MONGO_REPO}
+    MONGO_REPO=${MONGO_REPO} 
+    
 
 #
 # Dependencies
@@ -37,7 +38,9 @@ RUN set -eux; \
 		echo 'install: --no-document'; \
 		echo 'update: --no-document'; \
 	} >> /usr/local/etc/gemrc; \
-    apt-get update -qq; \
+    ln -fs /usr/share/zoneinfo/UCT /etc/localtime; \
+    export DEBIAN_FRONTEND=noninteractive; \
+    apt-get update; \
     apt-get install -y --no-install-recommends \
                 bison \
                 build-essential \
@@ -188,10 +191,8 @@ RUN set -eux; \
     groupadd -r mongodb && useradd -r -g mongodb mongodb; \
     wget -O /js-yaml.js "https://github.com/nodeca/js-yaml/raw/${JSYAML_VERSION}/dist/js-yaml.js"; \
     mkdir /docker-entrypoint-initdb.d; \
-    apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 7F0CEB10; \
-    apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 9ECBEC467F0CEB10; \
-    wget -qO - https://www.mongodb.org/static/pgp/server-$MONGO_MAJOR.asc | sudo apt-key add -; \
-    echo "deb http://$MONGO_REPO/apt/ubuntu trusty/mongodb-org/$MONGO_MAJOR multiverse" | tee "/etc/apt/sources.list.d/$MONGO_PACKAGE.list"; \
+    apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 68818C72E52529D4; \
+    echo "deb http://$MONGO_REPO/apt/ubuntu bionic/mongodb-org/$MONGO_MAJOR multiverse" | tee "/etc/apt/sources.list.d/$MONGO_PACKAGE.list"; \
     apt-get update; \
     apt-get install -y \
         mongodb-org \
