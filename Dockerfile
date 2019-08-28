@@ -11,7 +11,6 @@ ENV RUBY_MAJOR=2.4 \
     RUBY_VERSION=2.4.1 \
     RUBY_DOWNLOAD_SHA256=25da31b9815bfa9bba9f9b793c055a40a35c43c6adfb1fdbd81a09099f9b529c \
     RUBYGEMS_VERSION=3.0.3 \
-    GEM_HOME=/usr/local/bundle \
     BUNDLE_SILENCE_ROOT_WARNING=1 \
     GOSU_VERSION=1.11 \
     REDIS_VERSION=5.0.5 \
@@ -21,10 +20,7 @@ ENV RUBY_MAJOR=2.4 \
     GPG_KEYS=0C49F3730359A14518585931BC711F9BA15703C6 \
     MONGO_MAJOR=4.0 \
     MONGO_VERSION=4.0.12
-ENV BUNDLE_PATH="$GEM_HOME" \
-    BUNDLE_APP_CONFIG="$GEM_HOME" \
-    PATH=$GEM_HOME/bin:$BUNDLE_PATH/gems/bin:$PATH \
-    MONGO_PACKAGE=${MONGO_PACKAGE} \
+ENV MONGO_PACKAGE=${MONGO_PACKAGE} \
     MONGO_REPO=${MONGO_REPO} 
     
 
@@ -42,36 +38,47 @@ RUN set -eux; \
     export DEBIAN_FRONTEND=noninteractive; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
+                autoconf \
+                automake \
                 bison \
                 build-essential \
                 ca-certificates \
                 curl \
                 dpkg-dev \
+                g++ \
                 gcc \
                 git \
                 gnupg2 \
                 gzip \
                 jq \
+                libreadline-dev \
                 libc6-dev \
                 libcurl3-dev \
                 libfftw3-double3 \
+                libffi-dev \
                 libgdbm-dev \
                 libgmp3-dev \
+                libgmp-dev \
                 libgsl0-dev \
                 libgtkmm-3.0.1 \
+                libncurses5-dev \
                 libpq-dev \
                 libnotify4 \
+                libssl-dev \
+                libtool \
+                libyaml-dev \
                 make \
                 nodejs \
                 numactl \
+                pkg-config \
                 software-properties-common \
-                ruby \
                 ssh \
 	            tar \
                 tcl8.5 \
                 unzip \
 	            wget \
-                zip; \
+                zip \
+                zlib1g-dev; \
     if ! command -v ps > /dev/null; then \
         apt-get install -y --no-install-recommends procps; \
     fi; \
@@ -82,52 +89,17 @@ RUN set -eux; \
     fi; \
     rm -rf /var/lib/apt/lists/*;
 
-RUN wget -O ruby.tar.xz "https://cache.ruby-lang.org/pub/ruby/${RUBY_MAJOR%-rc}/ruby-$RUBY_VERSION.tar.xz"; \
-    echo "$RUBY_DOWNLOAD_SHA256 *ruby.tar.xz" | sha256sum --check --strict; \
-    mkdir -p /usr/src/ruby; \
-    tar -xJf ruby.tar.xz -C /usr/src/ruby --strip-components=1; \
-    rm ruby.tar.xz; \
-    cd /usr/src/ruby; \
-    # hack in "ENABLE_PATH_CHECK" disabling to suppress:
-    #   warning: Insecure world writable dir
-    { \
-        echo '#define ENABLE_PATH_CHECK 0'; \
-        echo; \
-        cat file.c; \
-    } > file.c.new; \
-    mv file.c.new file.c; \
-    autoconf; \
-    gnuArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)"; \
-    ./configure --build="$gnuArch" --disable-install-doc --enable-shared; \
-    make -j "$(nproc)"; \
-    make install; \
-    find /usr/local -type f -executable -not \( -name '*tkinter*' \) -exec ldd '{}' ';' \
-         | awk '/=>/ { print $(NF-1) }' \
-         | sort -u \
-         | xargs -r dpkg-query --search \
-         | cut -d: -f1 \
-         | sort -u \
-         | xargs -r apt-mark manual \
-    ; \
-    cd /; \
-    rm -r /usr/src/ruby; \
-    # make sure bundled "rubygems" is older than RUBYGEMS_VERSION (https://github.com/docker-library/ruby/issues/246)
-    ruby -e 'exit(Gem::Version.create(ENV["RUBYGEMS_VERSION"]) > Gem::Version.create(Gem::VERSION))'; \
-    gem update --system "$RUBYGEMS_VERSION" && rm -r /root/.gem/; \
-    # verify we have no "ruby" packages installed
-    ! dpkg -l | grep -i ruby; \
-    [ "$(command -v ruby)" = '/usr/local/bin/ruby' ]; \
-    mkdir -p "$GEM_HOME" && chmod 777 "$GEM_HOME";
-
 #
-# Rails
+# Ruby
 #
-
-RUN command curl -sSL https://rvm.io/mpapis.asc | gpg --import -; \
-    command curl -sSL https://rvm.io/pkyczynski.asc | gpg --import -; \
-    gpg --keyserver hkp://pool.sks-keyservers.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB; \
-    unset GEM_HOME; \
-    bash -c "curl -sSL https://get.rvm.io | bash -s stable --ruby=$RUBY_VERSION --rails; exit 0"
+RUN set -eux; \
+    gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB; \
+    curl -sSL https://get.rvm.io -o /tmp/rvm.sh; \
+    cat /tmp/rvm.sh; \
+    cat /tmp/rvm.sh | bash -s stable; 
+RUN /bin/bash -l -c "rvm install 2.4.1" 
+RUN /bin/bash -l -c "rvm use 2.4.1 --default"
+RUN /bin/bash -l -c "gem install bundler"
 
 #
 # Gosu
