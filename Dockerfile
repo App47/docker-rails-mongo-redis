@@ -90,6 +90,14 @@ RUN set -eux; \
     rm -rf /var/lib/apt/lists/*;
 
 #
+# Java 8
+#
+RUN set -eux; \
+    add-apt-repository ppa:openjdk-r/ppa; \            
+    apt-get update; \
+    apt-get install -y openjdk-8-jdk; 
+
+#
 # Ruby
 #
 RUN set -eux; \
