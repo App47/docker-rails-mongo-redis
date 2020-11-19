@@ -91,9 +91,9 @@ RUN set -eux; \
 # Android 8
 #
 RUN set -eux; \
-    add-apt-repository ppa:openjdk-r/ppa; \            
+    add-apt-repository ppa:openjdk-r/ppa; \
     apt-get update; \
-    apt-get install -y openjdk-8-jdk; 
+    apt-get install -y openjdk-8-jdk;
 
 #
 # Android SDK
@@ -137,8 +137,8 @@ RUN set -eux; \
     gpg --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 7D2BAF1CF37B13E2069D6956105BD0E739499BDB; \
     curl -sSL https://get.rvm.io -o /tmp/rvm.sh; \
     cat /tmp/rvm.sh; \
-    cat /tmp/rvm.sh | bash -s stable; 
-RUN /bin/bash -l -c "rvm install 2.4.1" 
+    cat /tmp/rvm.sh | bash -s stable;
+RUN /bin/bash -l -c "rvm install 2.4.1"
 RUN /bin/bash -l -c "rvm use 2.4.1 --default"
 RUN /bin/bash -l -c "gem install bundler"
 
@@ -191,7 +191,7 @@ RUN groupadd -r -g 999 redis && useradd -r -g redis -u 999 redis; \
     rm -r /usr/src/redis; \
     mkdir /data && chown redis:redis /data;
 
-VOLUME /data 
+VOLUME /data
 
 #
 # Mongo
@@ -202,13 +202,22 @@ RUN set -eux; \
     groupadd -r mongodb && useradd -r -g mongodb mongodb; \
     wget -O /js-yaml.js "https://github.com/nodeca/js-yaml/raw/${JSYAML_VERSION}/dist/js-yaml.js"; \
     mkdir /docker-entrypoint-initdb.d; \
-    apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 68818C72E52529D4; \
-    echo "deb http://$MONGO_REPO/apt/ubuntu bionic/mongodb-org/$MONGO_MAJOR multiverse" | tee "/etc/apt/sources.list.d/$MONGO_PACKAGE.list"; \
-    apt-get install --reinstall systemd -y; \
+    export GNUPGHOME="$(mktemp -d)"; \
+    gpg --batch --keyserver ha.pool.sks-keyservers.net --recv-keys 9DA31620334BD75D9DCB49F368818C72E52529D4; \
+    gpg --batch --export 9DA31620334BD75D9DCB49F368818C72E52529D4 > /etc/apt/trusted.gpg.d/mongodb.gpg; \
+    command -v gpgconf && gpgconf --kill all || :; \
+    rm -rf "$GNUPGHOME"; \
+    apt-key list; \
+    echo "deb http://$MONGO_REPO/apt/ubuntu bionic/${MONGO_PACKAGE%-unstable}/$MONGO_MAJOR multiverse" | tee "/etc/apt/sources.list.d/${MONGO_PACKAGE%-unstable}.list"; \
+    export DEBIAN_FRONTEND=noninteractive; \
     apt-get update; \
     apt-get install -y \
-        mongodb-org \
-        build-essential \
+        ${MONGO_PACKAGE}=$MONGO_VERSION \
+        ${MONGO_PACKAGE}-server=$MONGO_VERSION \
+        ${MONGO_PACKAGE}-shell=$MONGO_VERSION \
+        ${MONGO_PACKAGE}-mongos=$MONGO_VERSION \
+        ${MONGO_PACKAGE}-tools=$MONGO_VERSION \
+	build-essential \
         python-dev; \
     rm -rf /var/lib/apt/lists/*; \
     rm -rf /var/lib/mongodb; \
