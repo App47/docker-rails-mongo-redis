@@ -54,6 +54,7 @@ RUN set -eux; \
                 nodejs \
                 numactl \
                 pkg-config \
+                python-dev \
                 software-properties-common \
                 ssh \
 	            tar \
