@@ -59,6 +59,7 @@ RUN set -eux; \
                 ssh \
 	            tar \
                 unzip \
+                vim \
 	            wget \
                 zip \
                 zlib1g-dev; \
@@ -86,7 +87,7 @@ RUN set -eux; \
 RUN set -eux; \
     apt-get update; \
     apt-get install -y ruby-full;\
-    gem install bundler;
+    gem install bundler -v 2.1.4; 
 
 #
 # Gosu
