@@ -108,6 +108,7 @@ RUN set -eux; \
 RUN /bin/bash -l -c "rvm install 2.4.1" 
 RUN /bin/bash -l -c "rvm use 2.4.1 --default"
 RUN /bin/bash -l -c "gem install bundler"
+RUN /bin/bash -l -c "gem install aws-s3"
 
 #
 # Gosu
