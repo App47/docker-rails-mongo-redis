@@ -2,12 +2,11 @@
 Docker Image
 ============
 
-To support the General testing container with Redis and Mongo
+To support the General testing container, use redis and mongo containers provided by circle CI 
 
 * Ubuntu 20
-* Mongo 4.0.12
-* Redis
-* Ruby 2.7.1
+* Java 8
+* Ruby 2.7.0
 
 
 Docker commands that are useful
