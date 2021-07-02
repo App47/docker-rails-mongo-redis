@@ -17,5 +17,5 @@ Docker commands that are useful
 1. `docker build .` to build the current version
 2. `docker login --username=%USERNAME%` to log into docker hub
 2. `docker images` to list the images, with the most recent being at the top.
-3. `docker tag %IMAGE ID% app47/webui-focal:latest` to tag the local image
-4. `docker push app47/webui-focal` to push to the hub, this tag can then be used in circle ci files or other places.
+3. `docker tag %IMAGE ID% app47/webui-focal2:latest` to tag the local image
+4. `docker push app47/webui-focal2` to push to the hub, this tag can then be used in circle ci files or other places.
